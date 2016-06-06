@@ -1,0 +1,946 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>『Effective Scala』</title>
+        
+        <script src="highlightjs/highlight.pack.js"></script>
+        <link rel="stylesheet" href="reveal/css/reveal.css"/>
+        <link rel="stylesheet" href="reveal/css/theme/sky.css" id="theme" />
+        <link rel="stylesheet" type="text/css" href="highlightjs/styles/github.css">
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section><h1> <a href="http://twitter.github.io/effectivescala/index-ja.html" target=_brank >Effective Scala</a></h1>
+<p>
+</p>
+</section>
+<section><h1> 概要</h1>
+<ol>
+<li> 英語と中国語と日本語がある。翻訳者に感謝</li>
+<li> 入門書ではない。入門にはより適したドキュメントがある</li>
+<li> 内容にバイアスがかかっていても、他の領域に移し変えることは可能</li>
+<li> ルールではないから逸脱してもよい</li>
+
+</ol>
+
+</section>
+<section><h2> Scalaとは</h2>
+<ol>
+<li> Twitter社の主要言語</li>
+<li> インフラの大部分、特に分散システムを構成する大容量サービス群の作成</li>
+<li> 極めて効果的だが、適用には十分な注意が必要</li>
+
+</ol>
+
+</section>
+<section><h2> 一連のベストプラクティスを提供</h2>
+<ol>
+<li> 落とし穴は何か</li>
+<li> どの機能を使うか</li>
+<li> どの機能を避けるか</li>
+<li> いつ純粋関数型のスタイルを採用するか</li>
+
+</ol>
+
+</section>
+<section><h2> 正確さの次にはいつも読み手のことを考えよう</h2>
+<p>
+簡潔な表現が可能だが、それゆえに読みにくくもなりがち
+</p>
+</section>
+<section><h2> 何より Scala でプログラミングしよう</h2>
+<p>
+この言語は Java でも Haskell でも Python でもない
+</p>
+</section>
+<section><h2> このドキュメントについて</h2>
+<ol>
+<li> 生きたドキュメントなので変更されうるが、中核となるアイデアは変わらない</li>
+
+</ol>
+
+</section>
+<section><h3> 中核となるアイデア</h3>
+<ol>
+<li> 可読性を最優先せよ</li>
+<li> 汎用的なコードを書け</li>
+<li> シンプルな言語機能を活用せよ</li>
+<li> 複雑さは洗練がもたらす税金であり、効用がコストを上回っていることを常に確認すべきだ</li>
+
+</ol>
+
+<p>
+</p>
+</section>
+<section><h1> 書式</h1>
+<p>
+Scalaはいろいろな書き方を許すのでコードがバラバラになりがちである。そのため、同一の整形ルールを適用して可読性を高める
+</p>
+</section>
+<section><h2> Scala が許すいろいろな書き方 メソッド呼び出し編</h2>
+<ul>
+<li> 「.」と半角スペースはどちらを使ってもよい</li>
+<li> 引数がゼロか1つのメソッドは()があってもなくてもよい</li>
+
+</ul>
+
+</section>
+<section><h2> Twitter 社では"Scala style guide"を順守すると同時に以下のルールを追加</h2>
+<ul>
+<li> インデントは半角スペース2つ</li>
+<li> 1行100column</li>
+<li> メソッド、クラス、オブジェクトの定義同士の間に1行空ける</li>
+
+</ul>
+
+</section>
+<section><h3> 命名(1/2)</h3>
+<ol>
+<li> 小さいスコープでは短い名前を使う</li>
+<ol>
+<li> ループカウンタのijk</li>
+</ol>
+<li> 大きなスコープではより長くする。特に、外部公開するAPIは説明的な名前を持つべき</li>
+<ol>
+<li> Future.all < Future.collect</li>
+</ol>
+<li> 一般的な略語は使ってもよい……ok/err/defnは可、sfriは不可</li>
+
+</ol>
+
+</section>
+<section><h3> 命名(2/2)</h3>
+<ol>
+<li> 異なる要素で名前を再利用しない、基本valで変数を定義すべき</li>
+<li> 予約名を`でオーバロードしない、type ではなく typ とする</li>
+<li> 副作用を起こす操作は能動態で命名、user.setActiveでなくuser.activateとする</li>
+<li> 値を返すメソッドは説明的に命名する……defined ではなく isDefined</li>
+<li> getter メソッドの先頭にはgetをつけない</li>
+<li> パッケージ名やオブジェクト名ですでにカプセル化されている名前を繰り返さない……Userクラスの自身のオブジェクトを返すメソッドはgetUser ではなく get </li>
+
+</ol>
+
+</section>
+<section><h3> import</h3>
+<ol>
+<li> import はファイルの先頭に書く</li>
+<li> import 行はアルファベット順に並び替える。視覚的に探しやすく自動化もしやすい</li>
+<li> 複数の名前をimportするなら{}を使う</li>
+<li> 6個以上の名前をimportするならワイルドカードを使う、ただし濫用しない</li>
+<li> Collection を使う際は immutable と mutable どちらかを名前修飾で明らかにする</li>
+<li> 他のパッケージからの相対指定importは使わない</li>
+
+</ol>
+
+</section>
+<section><h3> {}</h3>
+<p>
+複合式を作るのに使う。
+</p>
+<p>
+明確化が目的でないなら小さいメソッド定義で{}を使わない
+</p>
+<p>
+</p>
+<pre><code class="scala">def square(x: Int) = {
+  x * x
+}
+</code></pre>
+<p>
+ではなく
+</p>
+<p>
+</p>
+<pre><code class="scala">def square(x: Int) = x * x
+</code></pre>
+<p>
+と書く
+</p>
+</section>
+<section><h3> パターンマッチ</h3>
+<p>
+関数定義中にパターンマッチを直接使えるならいつでも使う
+</p>
+<p>
+</p>
+<pre><span class="code-title">型ごとに処理を切り替える実装</span><code class="scala">obj match {
+  case str: String => ...
+  case addr: SocketAddress => ...
+</code></pre>
+<p>
+</p>
+</section>
+<section><h4> 分解と組み合わせる</h4>
+<p>
+</p>
+<pre><span class="code-title">ケースクラスにマッチする際</span><code class="scala">animal match {
+  case Dog(breed) => "dog (%s)".format(breed)
+  case other => other.species
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> コメント</h3>
+<p>
+標準のScalaDocスタイルは使わない方がよい
+</p>
+<p>
+/** Comment
+</p>
+<pre>
+*
+*/
+</pre>
+<p>
+</p>
+</section>
+<section><h2> 型とジェネリクス</h2>
+<p>
+型システムの目的はプログラミングの誤りを検出すること
+</p>
+<p>
+しかし、型を慎重に使えば明瞭さが高まるが、過剰に巧妙に使うと読みにくくなる。
+</p>
+</section>
+<section><h2> 戻り型アノテーション</h2>
+<p>
+Scalaでは省略可能だが、優れたドキュメントとなりうる
+</p>
+</section>
+<section><h2> 変位(variance)</h2>
+<ul>
+<li> ジェネリクスが派生型と結び付く際に出現</li>
+^ コンテナ型の派生型と要素型の派生型がどう関連するかを定義
+</ul>
+
+<p>
+</p>
+</section>
+<section><h3> 要素型を受け取るメソッドはCollectionを適切に格下げすべき</h3>
+<ol>
+<li> 不変コレクションは covarient</li>
+<li> 可変コレクションは invarient</li>
+
+</ol>
+
+</section>
+<section><h2> 型エイリアス</h2>
+<ul>
+<li> 意思疏通が目的で簡潔さを高めたい場合に使う</li>
+<li> 一目瞭然な型をエイリアスすべきではない</li>
+<li> エイリアスが使える場合はサブクラスにしてはいけない</li>
+
+</ul>
+
+</section>
+<section><h2> 暗黙(implicit)</h2>
+<p>
+解法ルールが複雑で、簡単な字句検査すら実際の処理を把握しにくくなる。慎重に使う
+</p>
+</section>
+<section><h3> 間違いなく使ってもよい場合</h3>
+<ol>
+<li> ScalaスタイルのCollectionを拡張あるいは追加する</li>
+<li> オブジェクトを適合(adapt)、拡張(extend)する(pimp my libraryパターン)</li>
+<li> 制約エビデンスを提供して型安全性を強化する</li>
+<li> 型エビデンスを提供する</li>
+<li> Manifest(2.10以降はTypeTag)</li>
+
+</ol>
+
+<p>
+リストをStreamに変換するような時に暗黙を使うのはやめよう
+</p>
+</section>
+<section><h2> Collection</h2>
+<ol>
+<li> ScalaのCollectionは非常にジェネリックで機能豊富で強力で組み立てやすい</li>
+<li> すべてのScalaプログラマーはCollection design documentを読む</li>
+<li> 常に、要求を最もシンプルに満たすCollectionを使う</li>
+
+</ol>
+
+</section>
+<section><h3> 階層</h3>
+<p>
+ScalaのCollectionライブラリは巨大
+</p>
+<ol>
+<li> Traversable(T)を基底とする入り組んだ継承階層</li>
+<li> ほとんどのCollectionにimmutable とmutable がある</li>
+
+</ol>
+
+<p>
+Iterable(T) iterate可能、iteratorとforeachメソッドを提供
+</p>
+<table class="table table-hover table-stripe">
+<tr>
+	<th> Seq(T) </th><td> 順序づけされている</td>
+</tr>
+
+<tr>
+	<th> Set(T) </th><td> 数学的な集合、順序づけしていなくて要素が重複しない</td>
+</tr>
+
+<tr>
+	<th> Map(T) </th><td> 順序づけしていない連想配列</td>
+</tr>
+
+</table>
+
+</section>
+<section><h3> 使う</h3>
+<p>
+Immutable Collectionを使おう。
+</p>
+<ol>
+<li> ほとんどの状況に適用可能</li>
+<li> 参照透過ゆえにスレッドセーフ</li>
+
+</ol>
+
+<p>
+明示的に mutable 名前空間を使う
+</p>
+<p>
+</p>
+</section>
+<section><h2> スタイル</h2>
+<ol>
+<li> 中間結果とパラメータに名前をつけ、作者の意図を明確にするとよい</li>
+<li> 名前空間の汚染が気になるなら{}でグループ化する</li>
+
+</ol>
+
+</section>
+<section><h2> 性能</h2>
+<ol>
+<li> 高水準なCollectionライブラリは性能推測が困難</li>
+<li> コードの正確さは判断しやすい</li>
+<li> Scalaはユーザに対し、ボクシングやアンボクシングの操作を隠蔽する→性能やメモリ使用量の面で重大なペナルティを被る</li>
+
+</ol>
+
+<p>
+性能最適化の第一法則は、そのアプリケーションがなぜ遅いのかを理解すること
+</p>
+</section>
+<section><h3> 最適化の前にプロファイリングする</h3>
+<ol>
+<li> 回数の多いループ</li>
+<li> 巨大なデータ構造</li>
+
+</ol>
+
+</section>
+<section><h3> 性能やメモリ効率が要求される場面では低レベルCollectionを使う</h3>
+<p>
+ex:
+</p>
+<ol>
+<li> 巨大なシーケンスにはArray</li>
+<li> シーケンスは直接</li>
+
+</ol>
+
+</section>
+<section><h2> Java Collection</h2>
+<p>
+JavaとScalaのCollectionを相互運用するにはscala.collection.JavaConvertersを使う
+</p>
+<ol>
+<li> asJava</li>
+<li> asScala</li>
+
+</ol>
+
+</section>
+<section><h2> 並行性</h2>
+<p>
+Javaのスレッド生成は高コストなのでスレッドプールを使ってリソースとして管理する。しかしリソース管理はモジュール性を危うくもする
+</p>
+</section>
+<section><h3> Future</h3>
+<p>
+並行操作とリソース管理を疎結合にする仕組み
+</p>
+<p>
+</p>
+<pre><code class="scala">def collect(results: List[Result] = Nil): Future[List[Result]] =
+  doRpc() flatMap { result =>
+    if (results.length < 9)
+      collect(result :: results)
+    else
+      Future.value(result :: results)
+  }
+collect() onSuccess { results =>
+  printf("Got results %sn", results.mkString(", "))
+}
+</code></pre>
+<p>
+Concurrent Collection
+Immutable Collectionで目的を達成できるならいつでもこれを使う
+</p>
+</section>
+<section><h3> 制御構造</h3>
+<ol>
+<li> 関数型や宣言型はロジックをいくつかの小さなメソッドや関数に分解</li>
+<li> 分解した小さなメソッドや関数をmatchで貼り合わせる</li>
+
+</ol>
+
+</section>
+<section><h2> 式指向</h2>
+<p>
+条件式のそれぞれの分岐は同じ型の値を計算し、for (……) yield は内包(comprehension)を計算
+</p>
+</section>
+<section><h2> 再帰</h2>
+<p>
+一般的に使われる。
+</p>
+</section>
+<section><h3> 再帰を使うメリット</h3>
+<ol>
+<li> 問題を簡潔に記述しやすい</li>
+<li> コンパイラが末尾呼び出しの最適化が適用できる</li>
+<li> コードを正規のループに置き換え</li>
+
+</ol>
+
+<p>
+</p>
+<pre><span class="code-title">FIX-DOWNアルゴリズム</span><code class="scala">@tailrec
+final def fixDown(heap: Array[T], i: Int, j: Int) {
+  if (j < i*2) return
+  val m = if (j == i*2 || heap(2*i) < heap(2*i+1)) 2*i else 2*i + 1
+  if (heap(m) < heap(i)) {
+    swap(heap, i, m)
+    fixDown(heap, m, j)
+  }
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> return</h2>
+<p>
+早めのreturnは分岐を減らし、ネストを浅くできる
+</p>
+</section>
+<section><h3> クロージャ内でreturnを使うと見えざるコストが発生しうる</h3>
+<p>
+</p>
+<pre><code class="scala">seq foreach { elem =>
+  if (elem.isLast)
+    return
+  // process...
+}
+</code></pre>
+<p>
+この `return` は、バイトコードでは例外を `throw` と `catch` するコードとして実装されるので、実行頻度の高いコード内で使うと性能に影響を与える。
+</p>
+<p>
+</p>
+</section>
+<section><h2> forループと内包</h2>
+<p>
+ループと集約を簡潔かつ自然に表現できる。が、内部的にはクロージャを割り当ててディスパッチしていることを覆い隠している
+</p>
+</section>
+<section><h3> では、どうするか？</h3>
+<p>
+foreach、flatMap、map、filterを直接呼び出す
+</p>
+<p>
+</p>
+<pre><span class="code-title">for文の実態</span><code class="scala">container foreach { item =>
+  if (item != 2) return
+}
+</code></pre>
+<p>
+</p>
+<blockquote>
+ネストした匿名関数でのreturnはでの return 式は、ランタイムエラーである NonLocalReturnException の throw と catch に変換される。
+ この場合、for 式の中の container が遅延評価されると return 式の挙動が意図しないものになる場合がある
+</blockquote>
+
+<p>
+</p>
+</section>
+<section><h2> require と assert</h2>
+<p>
+どちらも実行可能なドキュメント
+</p>
+</section>
+<section><h2> assert</h2>
+<p>
+コードが仮定する不変条件を表現
+</p>
+</section>
+<section><h2> require</h2>
+<p>
+APIの契約を表現
+</p>
+</section>
+<section><h2> 関数型プログラミング</h2>
+<ol>
+<li> ステイトフルな変更よりも値の変換を重視</li>
+<li> 参照透過(Referentially transparent)なコードを産み出す</li>
+<li> より強力な不変式を提供</li>
+
+</ol>
+
+</section>
+<section><h3> 仕事の道具</h3>
+<ol>
+<li> caseクラス</li>
+<li> pattern match</li>
+<li> 構造化代入(destructuring binding)</li>
+<li> 型推論</li>
+<li> クロージャ</li>
+
+</ol>
+
+<p>
+</p>
+</section>
+<section><h3> case クラス</h3>
+<ol>
+<li> 代数的データ型をエンコード</li>
+<li> 数多くのデータ構造をモデリングするのに役立つ</li>
+<li> 強力な不変式を簡潔なコードとして提供</li>
+<li> pattern match と一緒に使うと有用</li>
+
+</ol>
+
+</section>
+<section><h2> Option</h2>
+<ol>
+<li> 空(None)ないし満たされた(Some(value))のいずれかであるコンテナ</li>
+<li> nullの安全な代替手段を提供</li>
+<li> 可能な限り使うべき</li>
+<li> 要素が高々1のCollectionなのでCollection操作を使う</li>
+
+</ol>
+
+<p>
+</p>
+<pre><span class="code-title">要素が高々1のCollectionなのでCollection操作を使う</span><code class="scala">opt foreach { value =>
+  operate(value)
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> 空と値ありの両方が分岐としてありうるならpattern matchを使う</h3>
+<p>
+</p>
+<pre><code class="scala">opt match {
+  case Some(value) => operate(value)
+  case None => defaultAction()
+}
+</code></pre>
+<p>
+値がないときはデフォルト値でよいならgetOrElseがある
+</p>
+<p>
+</p>
+<pre><code class="scala">operate(opt getOrElse defaultValue)
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> pattern match</h2>
+<p>
+条件分岐・分解・キャストの3つを融合する
+型ごとに処理を切り替える実装にパターンマッチを使う:
+</p>
+<p>
+</p>
+<pre><code class="scala">obj match {
+  case str: String => ...
+  case addr: SocketAddress => ...
+</code></pre>
+<p>
+また、パターンマッチは分解と組み合わせることで最も良い働きを示す。
+</p>
+<p>
+</p>
+<pre><span class="code-title">ケースクラスにマッチする際</span><code class="scala">animal match {
+  case Dog(breed) => "dog (%s)".format(breed)
+  case other => other.species
+}
+</code></pre>
+<p>
+</p>
+<pre><span class="code-title">デフォルト値に意味があるならgetOrElseで書く</span><code class="scala">val x = list.headOption getOrElse default
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> 部分関数(PartialFunction)</h2>
+<p>
+</p>
+<pre><span class="code-title">PartialFunction</span><code class="scala">val pf: PartialFunction[Int, String] = {
+  case i if i%2 == 0 => "even"
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> orElse と組み合わせられる</h3>
+<p>
+</p>
+<pre><span class="code-title">orElse</span><code class="scala">val tf: (Int => String) = pf orElse { case _ => "odd"}
+tf(1) == "odd"
+tf(2) == "even"
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> メソッドの引数として利用する例:</h3>
+<p>
+</p>
+<pre><code>trait Publisher[T] {
+  def subscribe(f: PartialFunction[T, Unit])
+}
+val publisher: Publisher[Int] = ...
+publisher.subscribe {
+  case i if isPrime(i) => println("found prime", i)
+  case i if i%2 == 0 => count += 2
+  /* ignore the rest */
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> Option を返す代わりに:</h3>
+<p>
+</p>
+<pre><code class="scala">// Attempt to classify the the throwable for logging.
+type Classifier = Throwable => Option[java.util.logging.Level]
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> PartialFunction で表現した方が良い場面もある:</h3>
+<p>
+</p>
+<pre><code class="scala">type Classifier = PartialFunction[Throwable, java.util.Logging.Level]
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> 構造化代入(destructuring binding)</h2>
+<ol>
+<li> 値の代入の一種、pattern matchと同じメカニズムを利用するが例外を許容せず、厳密に選択肢が1つの時だけ使える</li>
+<li> タプルや case クラスを使うときに有用</li>
+
+</ol>
+
+<p>
+</p>
+<pre><span class="code-title">構造化代入</span><code class="scala">val tuple = ('a', 1)
+val (char, digit) = tuple
+val tweet = Tweet("just tweeting", Time.now)
+val Tweet(text, timestamp) = tweet
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> 遅延評価</h2>
+<ol>
+<li> lazy で修飾された val フィールドは必要になったら計算される</li>
+<ol>
+<li> フィールドとメソッドが等価であるため</li>
+</ol>
+<li> 遅延フィールドはスレッドセーフ</li>
+<li> Javaと同じフィールドにする場合はprivate[this]を使う</li>
+
+</ol>
+
+</section>
+<section><h3> Before</h3>
+<p>
+</p>
+<pre><span class="code-title">Before</span><code class="scala">var _theField = None
+def field = if (_theField.isDefined) _theField.get else {
+  _theField = Some(computation())
+  _theField.get
+}
+</code></pre>
+<p>
+これが
+</p>
+</section>
+<section><h3> After</h3>
+<p>
+こうなる
+</p>
+<p>
+</p>
+<pre><span class="code-title">Before</span><code class="scala">lazy val field = computation()
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> 名前呼び出し</h2>
+<p>
+メソッドの引数は名前を使って特定してもよい
+</p>
+</section>
+<section><h2> flatMap</h2>
+<p>
+map と flatten を組み合わせたもの
+</p>
+</section>
+<section><h3> あるContainer[A]に対し</h3>
+<p>
+</p>
+<pre><code class="scala">flatMap[B](f: A => Container[B]): Container[B]
+</code></pre>
+<p>
+</p>
+<ol>
+<li> Collectionの要素に対し、各要素から新しいCollectionを作り出す関数rを呼び出した後、生成したCollectionをflattenした結果を返す</li>
+<li> Optionを扱う際にしばしば有効</li>
+
+</ol>
+
+</section>
+<section><h3> 例: 同じ文字を繰り返さないような2文字の文字列の順列をすべて取得</h3>
+<p>
+</p>
+<pre><code class="scala">val chars = 'a' to 'z'
+val perms = chars flatMap { a =>
+  chars flatMap { b =>
+    if (a != b) Seq("%c%c".format(a, b))
+    else Seq()
+  }
+}
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> ただし、for を使うともっと簡潔に書けたりする</h3>
+<p>
+</p>
+<pre><code class="scala">val perms = for {
+  a <- chars
+  b <- chars
+  if a != b
+} yield "%c%c".format(a, b)
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> オブジェクト指向プログラミング</h2>
+<ol>
+<li> Scalaの偉大さの大部分はオブジェクトシステムによるもの</li>
+<li> Scalaはすべての値がオブジェクトである純粋な言語</li>
+<li> mixinを使うと直交的かつ段階的にモジュールを組み合わせられる……DIを不要にしたい</li>
+<li> コンパイル時の静的な型検査を柔軟に組み合わせられる</li>
+
+</ol>
+
+<p>
+コンポーネントスタイルのプログラミングの極致がCakeパターン
+</p>
+</section>
+<section><h2> 依存性注入(DI)</h2>
+<ol>
+<li> Twitter ではむしろプログラムをモジュール化するために使っている</li>
+<li> 時には継承より合成を使うとテストしやすくなる</li>
+<li> DI には trait を使う</li>
+<li> 注入するのは他のオブジェクトを生成するfactory</li>
+<li> 戻り値を持つあらゆる関数はfactoryとみなせる</li>
+
+</ol>
+
+</section>
+<section><h3> traitを使ったDI</h3>
+<p>
+</p>
+<pre><span class="code-title">traitを使ったDI</span><code class="scala"> trait TweetStream {
+   def subscribe(f: Tweet => Unit)
+ }
+ class HosebirdStream extends TweetStream ...
+ class FileStream extends TweetStream ...
+ class TweetCounter(stream: TweetStream) {
+   stream.subscribe { tweet => count += 1 }
+ }
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> 戻り値を持つあらゆる関数はファクトリとみなせる</h3>
+<p>
+</p>
+<pre><span class="code-title">戻り値を持つあらゆる関数はファクトリとみなせる</span><code class="scala"> class FilteredTweetCounter(mkStream: Filter => TweetStream) {
+   mkStream(PublicTweets).subscribe { tweet => publicCount += 1 }
+   mkStream(DMs).subscribe { tweet => dmCount += 1 }
+ }
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> trait</h2>
+<ol>
+<li> 共通コードは使ってよい</li>
+<li> 短くして直交性を保つ</li>
+<li> 分割できる機能を1つのtraitの塊にしない</li>
+
+</ol>
+
+</section>
+<section><h3> 例：IO クラス</h3>
+<p>
+</p>
+<pre><span class="code-title">Before</span><code class="scala"> trait IOer {
+   def write(bytes: Array[Byte])
+   def read(n: Int): Array[Byte]
+ }
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> IO クラスを二つの振る舞いに分離:</h3>
+<p>
+</p>
+<pre><span class="code-title">After</span><code class="scala"> trait Reader {
+   def read(n: Int): Array[Byte]
+ }
+ trait Writer {
+   def write(bytes: Array[Byte])
+ }
+</code></pre>
+<p>
+</p>
+</section>
+<section><h3> IO クラスに mixin:</h3>
+<p>
+</p>
+<pre><span class="code-title">Mixin</span><code class="scala">new Reader with Writer
+</code></pre>
+<p>
+</p>
+</section>
+<section><h2> 可視性</h2>
+<p>
+</p>
+</section>
+<section><h1> EOP</h1>
+</section>
+            </div>
+        </div>
+        <script src="reveal/js/reveal.js"></script>
+        <script>
+            Reveal.initialize({
+                // Display controls in the bottom right corner
+                controls: true,
+
+                // Display a presentation progress bar
+                progress: true,
+
+                // Display the page number of the current slide
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enables touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change the presentation direction to be RTL
+                rtl: false,
+
+                // Turns fragments on and off globally
+                fragments: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark
+                // key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Number of milliseconds between automatically proceeding to the
+                // next slide, disabled when set to 0, this value can be overwritten
+                // by using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'default', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - Calculated automatically unless specified
+                // - Set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null
+            });
+            // Slide number formatting can be configured using these variables:
+            //  "h.v":  horizontal . vertical slide number (default)
+            //  "h/v":  horizontal / vertical slide number
+            //    "c":  flattened slide number
+            //  "c/t":  flattened slide number / total slides
+            Reveal.configure({ slideNumber: 'c/t' });
+            if( window.location.search.match( /print-pdf/gi ) ) {
+                var link = document.createElement( 'link' );
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = 'reveal/css/print/pdf.css';
+                document.getElementsByTagName( 'head' )[0].appendChild( link );
+            }
+
+            // for highlighting
+            hljs.initHighlightingOnLoad();
+        </script>
+    </body>
+</html>
